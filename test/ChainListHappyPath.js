@@ -2,17 +2,17 @@ var ChainList = artifacts.require("./ChainList.sol");
 
 // test suite
 contract('ChainList', function(accounts){
-    var chainListInstance;
-    var seller = accounts[1];
-    var buyer = accounts[2];
-    var articleName1 = "article 1";
-    var articleDescription1 = "Description for article 1";
-    var articlePrice1 = 10;
-    var articleName2 = "article 2";
-    var articleDescription2 = "Description for article 2";
-    var articlePrice2 = 20;
-    var sellerBalanceBeforeBuy, sellerBalanceAfterBuy;
-    var buyerBalanceBeforeBuy, buyerBalanceAfterBuy;
+    let chainListInstance;
+    const seller = accounts[1];
+    const buyer = accounts[2];
+    const articleName1 = "article 1";
+    const articleDescription1 = "Description for article 1";
+    const articlePrice1 = 10;
+    const articleName2 = "article 2";
+    const articleDescription2 = "Description for article 2";
+    const articlePrice2 = 20;
+    let sellerBalanceBeforeBuy, sellerBalanceAfterBuy;
+    let buyerBalanceBeforeBuy, buyerBalanceAfterBuy;
 
     it("should be initialized with empty values", function(){
         return ChainList.deployed().then(function(instance) {
@@ -105,37 +105,40 @@ contract('ChainList', function(accounts){
     });
 
     // buy the first article
-    it("should buy an article", function() {
-        return ChainList.deployed().then(function(instance) {
-            chainListInstance = instance;
-            // record balances of seller and buyer before the buy
-            sellerBalanceBeforeBuy = web3.fromWei(web3.eth.getBalance(seller), 'ether').toNumber();
-            buyerBalanceBeforeBuy = web3.fromWei(web3.eth.getBalance(buyer), 'ether').toNumber();
-            return chainListInstance.buyArticle(1, {
-                from: buyer,
-                value: web3.toWei(articlePrice1, 'ether')
-            });
-        }).then(function(receipt){
-            assert.equal(receipt.logs.length, 1, "one event should have been triggered");
-            assert.equal(receipt.logs[0].event, "LogBuyArticle", "event should be LogBuyArticle");
-            assert.equal(receipt.logs[0].args._id.toNumber(), 1, "article id must be 1");
-            assert.equal(receipt.logs[0].args._seller, seller, "event seller must be " + seller);
-            assert.equal(receipt.logs[0].args._buyer, buyer, "event buyer must be " + buyer);
-            assert.equal(receipt.logs[0].args._name, articleName1, "event article name must be " + articleName1);
-            assert.equal(receipt.logs[0].args._price.toNumber(), web3.toWei(articlePrice1, "ether"), "event article price must be " + web3.toWei(articlePrice1, "ether"));
+    it("should buy an article", async () => => {
+        const chainListInstance = await ChainList.deployed()
 
-            // record balances of buyer and seller after the buy
-            sellerBalanceAfterBuy = web3.fromWei(web3.eth.getBalance(seller), 'ether').toNumber();
-            buyerBalanceAfterBuy = web3.fromWei(web3.eth.getBalance(buyer), 'ether').toNumber();
+        const articleId = 1;
 
-            // check the effect of buy on balance of buyer and seller, accounting for gas
-            assert(sellerBalanceAfterBuy == sellerBalanceBeforeBuy + articlePrice1, "seller should have earned " + articlePrice1 + " ETH");
-            assert(buyerBalanceAfterBuy <= buyerBalanceBeforeBuy - articlePrice1, "buyer should have spent " + articlePrice1 + " ETH");
+        // record balances of seller and buyer before the buy
+        sellerBalanceBeforeBuy = web3.fromWei(web3.eth.getBalance(seller), 'ether').toNumber();
+        buyerBalanceBeforeBuy = web3.fromWei(web3.eth.getBalance(buyer), 'ether').toNumber();
 
-            return chainListInstance.getArticlesForSale();
-        }).then(function(data){
-            assert.equal(data.length, 1, "there should be now be only 1 article left for sale");
-            assert.equal(data[0].toNumber(), 2, "article 2 should be the only article left for sale");
+        const receipt = await chainListInstance.buyArticle(1, {
+            from: buyer,
+            value: web3.toWei(articlePrice1, 'ether')
+        });
+
+        assert.equal(receipt.logs.length, 1, "one event should have been triggered");
+        assert.equal(receipt.logs[0].event, "LogBuyArticle", "event should be LogBuyArticle");
+        assert.equal(receipt.logs[0].args._id.toNumber(), 1, "article id must be 1");
+        assert.equal(receipt.logs[0].args._seller, seller, "event seller must be " + seller);
+        assert.equal(receipt.logs[0].args._buyer, buyer, "event buyer must be " + buyer);
+        assert.equal(receipt.logs[0].args._name, articleName1, "event article name must be " + articleName1);
+        assert.equal(receipt.logs[0].args._price.toNumber(), web3.toWei(articlePrice1, "ether"), "event article price must be " + web3.toWei(articlePrice1, "ether"));
+
+        // record balances of buyer and seller after the buy
+        sellerBalanceAfterBuy = web3.fromWei(web3.eth.getBalance(seller), 'ether').toNumber();
+        buyerBalanceAfterBuy = web3.fromWei(web3.eth.getBalance(buyer), 'ether').toNumber();
+
+        // check the effect of buy on balance of buyer and seller, accounting for gas
+        assert(sellerBalanceAfterBuy == sellerBalanceBeforeBuy + articlePrice1, "seller should have earned " + articlePrice1 + " ETH");
+        assert(buyerBalanceAfterBuy <= buyerBalanceBeforeBuy - articlePrice1, "buyer should have spent " + articlePrice1 + " ETH");
+
+        const article = await chainListInstance.getArticlesForSale();
+
+        assert.equal(data.length, 1, "there should be now be only 1 article left for sale");
+        assert.equal(data[0].toNumber(), 2, "article 2 should be the only article left for sale");
 
             return chainListInstance.getNumberOfArticles();
         }).then(function(data){
