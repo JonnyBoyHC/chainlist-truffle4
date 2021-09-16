@@ -20,5 +20,15 @@ module.exports = {
                network_id: "4", // id_no reserved for rinkeby test network
                gas: 4700000
           }
+     },
+     compilers: {
+          solc: {
+               settings: {
+                    optimizer: {
+                         enabled: true,
+                         runs: 200
+                    }
+               }
+          }
      }
 };
